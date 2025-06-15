@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 import os
 import uuid
 import sqlite3
-import pandas as pd
-from sklearn.linear_model import LinearRegression
+
 
 
 class PropDataAgent:
@@ -44,7 +43,7 @@ class PropDataAgent:
 
         db_description = """
         This is a description of DB tables and columns.
-        This DB is used in cancer institute.
+        This DB is used in real eastate copany.
         We want you to generate useful insights from this database.
         """
 
