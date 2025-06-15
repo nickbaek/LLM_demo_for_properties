@@ -33,43 +33,7 @@ class PropDataAgent:
                             input: string (SQL query)
                             output: string (result of the query execution)
                             """,
-            ),
-            StructuredTool.from_function(
-                name="get_regression_coefficients",
-                func=self.get_regression_coefficients,
-                description="""
-                            Calculate regression coefficients for population and house quantity in predicting average house price.
-
-                            Coefficients can be used to predict next year's house prices. For example,
-                            if the coefficients are {'population': 0.5, 'house_quantity': -1.0},
-                            and next year the number of houses remains the same while the population increases by 10%,
-                            it means house prices are expected to rise by 5%.
-
-
-                            Parameters
-                            ----------
-                            data : list of dict
-                                Each dict must contain the keys:
-                                - 'year': int
-                                - 'population': int
-                                - 'house_quantity': int
-                                - 'average_house_price': int or float
-                            use_growth : bool, optional
-                                If True, use year-over-year growth rates of population and house_quantity as independent variables.
-                                If False (default), use absolute values.
-
-                            Returns
-                            -------
-                            dict
-                                Dictionary mapping variable names to their regression coefficients.
-                                For example: {'population': 0.5, 'house_quantity': -1.0}
-
-                            Raises
-                            ------
-                            ValueError
-                                If data is empty or any dict is missing required keys.
-                            """,
-            ),
+            )
         ]
         self.agent = self.initialize_chat_agent(chat_model)
 
@@ -185,70 +149,6 @@ class PropDataAgent:
         finally:
             cursor.close()
             conn.close()
-
-    def get_regression_coefficients(self, data: list, use_growth=False):
-        """
-        Calculate regression coefficients for population and house quantity in predicting average house price.
-
-        Coefficients can be used to predict next year's house prices. For example,
-        if the coefficients are {'population': 0.5, 'house_quantity': -1.0},
-        and next year the number of houses remains the same while the population increases by 10%,
-        it means house prices are expected to rise by 5%.
-
-
-        Parameters
-        ----------
-        data : list of dict
-            Each dict must contain the keys:
-            - 'year': int
-            - 'population': int
-            - 'house_quantity': int
-            - 'average_house_price': int or float
-        use_growth : bool, optional
-            If True, use year-over-year growth rates of population and house_quantity as independent variables.
-            If False (default), use absolute values.
-
-        Returns
-        -------
-        dict
-            Dictionary mapping variable names to their regression coefficients.
-            For example: {'population': 0.5, 'house_quantity': -1.0}
-
-        Raises
-        ------
-        ValueError
-            If data is empty or any dict is missing required keys.
-        """
-        pram = str(data)
-        self.color_print(f"Tool called - get_regression_coefficients {pram}", "debug")
-
-
-        if not data or not all(
-            all(
-                k in d
-                for k in ["year", "population", "house_quantity", "average_house_price"]
-            )
-            for d in data
-        ):
-            raise ValueError(
-                "Each item in data must contain 'year', 'population', 'house_quantity', and 'average_house_price'."
-            )
-
-        df = pd.DataFrame(data)
-
-        df["population_growth"] = df["population"].pct_change().fillna(0)
-        df["house_quantity_growth"] = df["house_quantity"].pct_change().fillna(0)
-
-        if use_growth:
-            X = df[["population_growth", "house_quantity_growth"]]
-        else:
-            X = df[["population", "house_quantity"]]
-        y = df["average_house_price"]
-
-        model = LinearRegression()
-        model.fit(X, y)
-
-        return dict(zip(X.columns, model.coef_))
 
     def color_print(self, message: str, type: str) -> None:
         """
